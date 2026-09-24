@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>チャンス目カウンター</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="app">
+    <header class="topbar">
+        <div>
+            <div class="eyebrow">SLOT DATA TOOL</div>
+            <h1>チャンス目カウンター</h1>
+            <p>稼働中の数値をリアルタイム集計</p>
+        </div>
+        <button class="reset-all" onclick="resetAll()">全データ削除</button>
+    </header>
+
+    <main>
+        <section class="summary card">
+            <div class="section-title">リアルタイム集計</div>
+            <div class="summary-grid">
+                <div class="stat">
+                    <span>無名 発光率（消灯）</span>
+                    <strong id="munmyo-rate">0%</strong>
+                    <small id="munmyo-count">0 / 0</small>
+                </div>
+                <div class="stat">
+                    <span>生駒 発光率（消灯）</span>
+                    <strong id="ikoma-rate">0%</strong>
+                    <small id="ikoma-count">0 / 0</small>
+                </div>
+                <div class="stat">
+                    <span>無名 15pt以上平均</span>
+                    <strong id="munmyo-avg15">0.0回</strong>
+                </div>
+                <div class="stat">
+                    <span>生駒 15pt以上平均</span>
+                    <strong id="ikoma-avg15">0.0回</strong>
+                </div>
+                <div class="stat">
+                    <span>無名 1pt回数</span>
+                    <strong id="munmyo-one">0回</strong>
+                </div>
+                <div class="stat">
+                    <span>生駒 1pt回数</span>
+                    <strong id="ikoma-one">0回</strong>
+                </div>
+                <div class="stat wide">
+                    <span>全体 出現率</span>
+                    <strong id="overall-rate">1 / 0</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="section-title">オールスター目</div>
+            <div class="allstar">
+                <div>
+                    <b>★ オールスター目</b>
+                    <span>無名＋生駒が同時に満pt → 銅藍CZ</span>
+                </div>
+                <button onclick="addAllStar()">記録</button>
+            </div>
+            <div class="allstar-count">現在のオールスター目：<strong id="allstar-count">0</strong>回</div>
+        </section>
+
+        <section class="characters">
+            <div class="counter-card red">
+                <div class="counter-head">
+                    <div><span class="label">無名</span><span class="mode">通常 / 高確</span></div>
+                    <strong id="munmyo-points">0 pt</strong>
+                </div>
+                <div class="chance-help">画像のチャンス目振り分けに合わせた7種類</div>
+                <div class="buttons chance-buttons">
+                    <button class="normal" onclick="addChance('munmyo',1,'normal_none')">【通常】<br>チャンス目<br><small>発光なし 1pt</small></button>
+                    <button class="normal flash" onclick="addChance('munmyo',15,'normal_light')">【通常】<br>チャンス目<br><small>発光あり 15pt</small></button>
+                    <button class="high" onclick="addChance('munmyo',15,'high_band')">【高確】<br>チャンス目<br><small>帯付き 15pt</small></button>
+                    <button class="normal combo" onclick="addChance('munmyo',15,'normal_combo')">【通常】<br>複合チャンス目<br><small>15pt</small></button>
+                    <button class="high combo" onclick="addChance('munmyo',30,'high_combo')">【高確】<br>複合チャンス目<br><small>30pt</small></button>
+                    <button class="normal allstar-btn" onclick="addChance('munmyo',30,'normal_allstar')">【通常】<br>オールスター目<br><small>30pt</small></button>
+                    <button class="high allstar-btn" onclick="addChance('munmyo',60,'high_allstar')">【高確】<br>オールスター目<br><small>60pt</small></button>
+                    <button class="danger" onclick="addCZ('munmyo')">CZ<br>当選</button>
+                </div>
+                <div class="mini-row">
+                    <button onclick="undo('munmyo')">↩ 1回戻す</button>
+                    <button onclick="clearCharacter('munmyo')">🗑 リセット</button>
+                </div>
+                <div class="single-light-rate">
+                    <div>単独チャンス目による発光率</div>
+                    <strong id="munmyo-single-rate">0.0%</strong>
+                    <span id="munmyo-single-count">発光あり 0 / 単独 0</span>
+                </div>
+            </div>
+
+            <div class="counter-card green">
+                <div class="counter-head">
+                    <div><span class="label">生駒</span><span class="mode">通常 / 高確</span></div>
+                    <strong id="ikoma-points">0 pt</strong>
+                </div>
+                <div class="chance-help">画像のチャンス目振り分けに合わせた7種類</div>
+                <div class="buttons chance-buttons">
+                    <button class="normal" onclick="addChance('ikoma',1,'normal_none')">【通常】<br>チャンス目<br><small>発光なし 1pt</small></button>
+                    <button class="normal flash" onclick="addChance('ikoma',15,'normal_light')">【通常】<br>チャンス目<br><small>発光あり 15pt</small></button>
+                    <button class="high" onclick="addChance('ikoma',15,'high_band')">【高確】<br>チャンス目<br><small>帯付き 15pt</small></button>
+                    <button class="normal combo" onclick="addChance('ikoma',15,'normal_combo')">【通常】<br>複合チャンス目<br><small>15pt</small></button>
+                    <button class="high combo" onclick="addChance('ikoma',30,'high_combo')">【高確】<br>複合チャンス目<br><small>30pt</small></button>
+                    <button class="normal allstar-btn" onclick="addChance('ikoma',30,'normal_allstar')">【通常】<br>オールスター目<br><small>30pt</small></button>
+                    <button class="high allstar-btn" onclick="addChance('ikoma',60,'high_allstar')">【高確】<br>オールスター目<br><small>60pt</small></button>
+                    <button class="danger" onclick="addCZ('ikoma')">CZ<br>当選</button>
+                </div>
+                <div class="mini-row">
+                    <button onclick="undo('ikoma')">↩ 1回戻す</button>
+                    <button onclick="clearCharacter('ikoma')">🗑 リセット</button>
+                </div>
+                <div class="single-light-rate">
+                    <div>単独チャンス目による発光率</div>
+                    <strong id="ikoma-single-rate">0.0%</strong>
+                    <span id="ikoma-single-count">発光あり 0 / 単独 0</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="section-title">アイテム</div>
+            <div class="item-grid" id="items"></div>
+            <div class="add-row">
+                <input id="item-name" placeholder="アイテム名">
+                <button onclick="addItem()">追加</button>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="section-title purple-title">ボイス</div>
+            <div class="voice-controls">
+                <button onclick="addVoice('男性')">男性</button>
+                <button onclick="addVoice('女性')">女性</button>
+                <button onclick="addVoice('景之弱')">景之弱</button>
+                <button onclick="addVoice('景之中')">景之中</button>
+                <button onclick="addVoice('景之強')">景之強</button>
+            </div>
+            <div class="bar-row">
+                <span>男性</span><div class="bar male-bar"><i id="male-bar"></i></div><b id="male-count">0 (0%)</b>
+            </div>
+            <div class="bar-row">
+                <span>女性</span><div class="bar female-bar"><i id="female-bar"></i></div><b id="female-count">0 (0%)</b>
+            </div>
+            <div class="bar-row">
+                <span>景之</span><div class="bar kage-bar"><i id="kage-bar"></i></div><b id="kage-count">0 (0%)</b>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="section-title teal-title">キャラ紹介</div>
+            <div class="voice-controls">
+                <button onclick="addCharacter('男性')">男性</button>
+                <button onclick="addCharacter('女性')">女性</button>
+                <button onclick="addCharacter('美馬')">美馬</button>
+            </div>
+            <div class="bar-row">
+                <span>男性</span><div class="bar male-bar"><i id="cmale-bar"></i></div><b id="cmale-count">0 (0%)</b>
+            </div>
+            <div class="bar-row">
+                <span>女性</span><div class="bar female-bar"><i id="cfemale-bar"></i></div><b id="cfemale-count">0 (0%)</b>
+            </div>
+            <div class="bar-row">
+                <span>美馬</span><div class="bar kage-bar"><i id="cmima-bar"></i></div><b id="cmima-count">0 (0%)</b>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="section-title">履歴</div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>No</th><th>累計G</th><th>周期</th><th>契機</th><th>種別</th><th>ST</th><th>結果</th><th>削除</th></tr>
+                    </thead>
+                    <tbody id="cz-table"></tbody>
+                </table>
+            </div>
+            <div class="add-row">
+                <input id="g-input" type="number" placeholder="累計G">
+                <select id="trigger"><option>周期</option><option>無名</option><option>生駒</option><option>鋼藍</option></select>
+                <select id="type"><option>EP</option><option>駿城</option><option>穢れ</option></select>
+                <input id="st-input" placeholder="ST1">
+                <select id="result"><option>―</option><option>成功</option><option>失敗</option><option>生</option><option>無</option></select>
+                <button onclick="addHistory()">履歴追加</button>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="section-title">CZ詳細</div>
+            <div class="detail-grid">
+                <div class="detail-box redbox"><b>無名CZ</b><strong id="munmyo-cz-count">0件</strong><span>成功率 <em id="munmyo-success">0%</em></span></div>
+                <div class="detail-box greenbox"><b>生駒CZ</b><strong id="ikoma-cz-count">0件</strong><span>成功率 <em id="ikoma-success">0%</em></span></div>
+                <div class="detail-box"><b>平均pt</b><strong id="avg-points">0pt</strong><span>総CZ <em id="total-cz">0件</em></span></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

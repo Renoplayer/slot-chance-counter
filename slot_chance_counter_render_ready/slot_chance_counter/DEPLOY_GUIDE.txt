@@ -1,0 +1,27 @@
+このフォルダはRender公開用に準備済みです。
+
+重要：現在のデータ保存方式はブラウザ(localStorage)です。
+そのため、このまま公開すると「同じURLをみんなで使える」だけで、データは各端末ごとに別々です。
+みんなで同じ実戦データを共有するには、次の段階でPostgreSQL等のサーバー側DBへ変更します。
+
+Render公開手順
+1. GitHubアカウントを作成/ログイン
+2. GitHubでNew repositoryを作成（例: slot-chance-counter）
+3. このフォルダの中身をGitHubリポジトリへアップロード
+4. RenderにGitHubでログイン
+5. New -> Web Service
+6. 作成したGitHubリポジトリを選択
+7. Build Command: pip install -r requirements.txt
+8. Start Command: gunicorn app:app
+9. Create Web Service
+
+公開後に表示される https://....onrender.com が共有URLです。
+
+次の段階：PostgreSQL対応
+- 台/実戦を識別するID
+- チャンス目履歴
+- CZ履歴
+- ボイス
+- キャラ紹介
+- アイテム
+をサーバーDBへ保存し、全員で同じデータを見るようにします。
