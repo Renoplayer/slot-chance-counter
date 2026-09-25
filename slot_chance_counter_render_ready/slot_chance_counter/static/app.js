@@ -30,6 +30,7 @@ function addChance(who,pts,type){
 }
 
 function addCZ(who){
+
   // CZを押した時点のポイントを自動取得
   const currentPoints=data.chars[who].points;
 
@@ -54,6 +55,7 @@ function addCZ(who){
 }
 
 function addAllStar(){
+
   data.allstar++;
 
   data.history.push({
@@ -68,6 +70,7 @@ function addAllStar(){
 }
 
 function undo(who){
+
   let e=data.chars[who].events.pop();
 
   if(e){
@@ -79,6 +82,7 @@ function undo(who){
 }
 
 function clearCharacter(who){
+
   data.chars[who]={
     points:0,
     events:[],
@@ -89,6 +93,7 @@ function clearCharacter(who){
 }
 
 function addItem(){
+
   let x=document.getElementById("item-name").value.trim();
 
   if(!x)return;
@@ -116,24 +121,80 @@ function addCharacter(v){
 }
 
 
-// 規定ptの入力欄は作らない
-// 履歴の「規定pt」列だけ表示する
+// 規定pt入力欄は作らない
+// 「周期」列と「結果」入力欄も削除
 function ensureHistoryPointUI(){
 
   const table=document.querySelector("#cz-table");
+  const historyTable=table?.closest("table");
 
-  const head=
-    table?.closest("table")?.querySelector("thead tr");
+  if(!historyTable)return;
 
-  // 古い規定pt入力欄がHTMLに残っていた場合は削除
-  const pointsInput=
-    document.getElementById("points-input");
+  const head=historyTable.querySelector("thead tr");
+
+  // 規定pt入力欄がHTMLに残っていた場合は削除
+  const pointsInput=document.getElementById("points-input");
 
   if(pointsInput){
     pointsInput.remove();
   }
 
-  // 規定ptの見出しを追加
+
+  // 「結果」のプルダウンを削除
+  const resultInput=document.getElementById("result");
+
+  if(resultInput){
+
+    const parent=resultInput.parentElement;
+
+    // input/selectだけの場合は親も削除
+    if(parent){
+      parent.remove();
+    }else{
+      resultInput.remove();
+    }
+  }
+
+
+  // 「周期」の入力・選択欄があれば削除
+  const trigger=document.getElementById("trigger");
+
+  if(trigger){
+    // triggerは「契機」なので削除しない
+  }
+
+
+  // 履歴テーブルの「周期」列を削除
+  if(head){
+
+    const headers=[...head.children];
+
+    headers.forEach((th,index)=>{
+
+      if(th.textContent.trim()==="周期"){
+
+        // ヘッダー削除
+        th.remove();
+
+        // 各行の同じ位置のセルを削除
+        const rows=historyTable.querySelectorAll("tbody tr");
+
+        rows.forEach(row=>{
+
+          if(row.children[index]){
+            row.children[index].remove();
+          }
+
+        });
+
+      }
+
+    });
+
+  }
+
+
+  // 規定pt見出しを追加
   if(head && !head.querySelector(".points-head")){
 
     const th=document.createElement("th");
@@ -141,23 +202,33 @@ function ensureHistoryPointUI(){
     th.className="points-head";
     th.textContent="規定pt";
 
-    head.insertBefore(th,head.lastElementChild);
+    head.insertBefore(
+      th,
+      head.lastElementChild
+    );
   }
 }
 
 
-// 手動で履歴を追加する場合
-// 規定ptは自動入力されるCZ履歴以外では「-」
+// 手動で履歴を追加
 function addHistory(){
 
   const g=
     document.getElementById("g-input").value||"-";
 
   data.history.push({
+
     g,
-    trigger:document.getElementById("trigger").value,
-    type:document.getElementById("type").value,
-    st:document.getElementById("st-input").value||"-",
+
+    trigger:
+      document.getElementById("trigger").value,
+
+    type:
+      document.getElementById("type").value,
+
+    st:
+      document.getElementById("st-input").value||"-",
+
     points:"-"
   });
 
@@ -165,20 +236,24 @@ function addHistory(){
     "g-input",
     "st-input"
   ].forEach(id=>{
+
     const el=document.getElementById(id);
 
     if(el){
       el.value="";
     }
+
   });
 
   save();
 }
 
+
 function removeHistory(i){
   data.history.splice(i,1);
   save();
 }
+
 
 function resetAll(){
 
@@ -190,24 +265,29 @@ function resetAll(){
   }
 }
 
+
 function pct(n,total){
+
   return total?
     ((n/total)*100).toFixed(1):
     "0.0";
 }
+
 
 function rate(events){
 
   let total=events.length;
 
   let hit=events.filter(
-    x=>x.type==="normal_light"||x.type==="light"
+    x=>x.type==="normal_light"||
+       x.type==="light"
   ).length;
 
   return total?
     Math.round(hit/total*100):
     0;
 }
+
 
 function singleLightStats(events){
 
@@ -220,17 +300,20 @@ function singleLightStats(events){
   );
 
   const light=single.filter(
-    x=>x.type==="normal_light"||x.type==="light"
+    x=>
+      x.type==="normal_light"||
+      x.type==="light"
   ).length;
 
   return {
-    single,
+    single:single.length,
     light,
     rate:single.length?
       ((light/single.length)*100).toFixed(1):
       "0.0"
   };
 }
+
 
 function avg15(events){
 
@@ -243,6 +326,7 @@ function avg15(events){
     "0.0";
 }
 
+
 function oneCount(events){
 
   return events.filter(
@@ -253,7 +337,6 @@ function oneCount(events){
 
 function render(){
 
-  // 規定pt入力欄を削除
   ensureHistoryPointUI();
 
 
@@ -277,13 +360,15 @@ function render(){
 
   document.getElementById("munmyo-count").textContent=
     `${m.events.filter(
-      x=>x.type==="normal_light"||x.type==="light"
+      x=>x.type==="normal_light"||
+         x.type==="light"
     ).length} / ${m.events.length}`;
 
 
   document.getElementById("ikoma-count").textContent=
     `${i.events.filter(
-      x=>x.type==="normal_light"||x.type==="light"
+      x=>x.type==="normal_light"||
+         x.type==="light"
     ).length} / ${i.events.length}`;
 
 
@@ -325,10 +410,12 @@ function render(){
 
   let flashes=
     m.events.filter(
-      x=>x.type==="normal_light"||x.type==="light"
+      x=>x.type==="normal_light"||
+         x.type==="light"
     ).length+
     i.events.filter(
-      x=>x.type==="normal_light"||x.type==="light"
+      x=>x.type==="normal_light"||
+         x.type==="light"
     ).length;
 
 
@@ -418,12 +505,17 @@ function render(){
   document.getElementById("cz-table").innerHTML=
     data.history.map((x,n)=>`
       <tr>
+
         <td>${n+1}</td>
+
         <td>${esc(x.g)}</td>
-        <td>①</td>
+
         <td>${esc(x.trigger)}</td>
+
         <td>${esc(x.type)}</td>
+
         <td>${esc(x.st)}</td>
+
         <td>${
           x.points===undefined||
           x.points===""||
@@ -431,38 +523,65 @@ function render(){
             "-":
             esc(x.points)+" pt"
         }</td>
+
         <td>
           <button onclick="removeHistory(${n})">
             削除
           </button>
         </td>
+
       </tr>
     `).join("");
 
 
-  // 規定ptの見出し
+  // 規定pt見出しを追加
   const mh=
     document.querySelector("#cz-table")
     ?.closest("table")
     ?.querySelector("thead tr");
 
 
-  if(mh && !mh.querySelector(".points-head")){
+  if(mh){
 
-    const th=document.createElement("th");
+    // 「周期」ヘッダーを削除
+    [...mh.children].forEach(th=>{
 
-    th.className="points-head";
-    th.textContent="規定pt";
+      if(th.textContent.trim()==="周期"){
+        th.remove();
+      }
 
-    mh.insertBefore(
-      th,
-      mh.lastElementChild
-    );
+    });
+
+
+    // 「結果」ヘッダーを削除
+    [...mh.children].forEach(th=>{
+
+      if(th.textContent.trim()==="結果"){
+        th.remove();
+      }
+
+    });
+
+
+    // 規定ptヘッダー
+    if(!mh.querySelector(".points-head")){
+
+      const th=document.createElement("th");
+
+      th.className="points-head";
+      th.textContent="規定pt";
+
+      mh.insertBefore(
+        th,
+        mh.lastElementChild
+      );
+    }
+
   }
 }
 
 
-// 「CZ詳細」セクションを画面から削除
+// CZ詳細を削除
 function removeCZDetail(){
 
   document.querySelectorAll(".card").forEach(card=>{
