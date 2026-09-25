@@ -1,13 +1,27 @@
 const KEY="slotChanceCounterV1";
+
 let data=JSON.parse(localStorage.getItem(KEY)||"null")||{
-  chars:{munmyo:{points:0,events:[],cz:[]},ikoma:{points:0,events:[],cz:[]}},
-  allstar:0,items:[],voices:{},characters:{},history:[]
+  chars:{
+    munmyo:{points:0,events:[],cz:[]},
+    ikoma:{points:0,events:[],cz:[]}
+  },
+  allstar:0,
+  items:[],
+  voices:{},
+  characters:{},
+  history:[]
 };
 
 // 旧データに規定ptが無くてもそのまま使えるようにする
-data.history=(data.history||[]).map(x=>({...x,points:x.points??"-"}));
+data.history=(data.history||[]).map(x=>({
+  ...x,
+  points:x.points??"-"
+}));
 
-function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+function save(){
+  localStorage.setItem(KEY,JSON.stringify(data));
+  render();
+}
 
 function addChance(who,pts,type){
   data.chars[who].points+=pts;
@@ -16,7 +30,7 @@ function addChance(who,pts,type){
 }
 
 function addCZ(who){
-  // 現在までに貯まっているポイントを自動取得
+  // CZを押した時点のポイントを自動取得
   const currentPoints=data.chars[who].points;
 
   data.chars[who].cz.push({
@@ -24,7 +38,7 @@ function addCZ(who){
     points:currentPoints
   });
 
-  // 規定ptを自動で履歴に記録
+  // 履歴に規定ptを自動記録
   data.history.push({
     g:"-",
     trigger:who==="munmyo"?"無名":"生駒",
@@ -33,7 +47,7 @@ function addCZ(who){
     points:currentPoints
   });
 
-  // CZ当選後にポイントをリセット
+  // ポイントをリセット
   data.chars[who].points=0;
 
   save();
@@ -55,66 +69,89 @@ function addAllStar(){
 
 function undo(who){
   let e=data.chars[who].events.pop();
-  if(e)data.chars[who].points=Math.max(0,data.chars[who].points-e.pts);
-  save()
+
+  if(e){
+    data.chars[who].points=
+      Math.max(0,data.chars[who].points-e.pts);
+  }
+
+  save();
 }
 
 function clearCharacter(who){
-  data.chars[who]={points:0,events:[],cz:[]};
-  save()
+  data.chars[who]={
+    points:0,
+    events:[],
+    cz:[]
+  };
+
+  save();
 }
 
 function addItem(){
   let x=document.getElementById("item-name").value.trim();
+
   if(!x)return;
+
   data.items.push(x);
+
   document.getElementById("item-name").value="";
-  save()
+
+  save();
 }
 
 function removeItem(i){
   data.items.splice(i,1);
-  save()
+  save();
 }
 
 function addVoice(v){
   data.voices[v]=(data.voices[v]||0)+1;
-  save()
+  save();
 }
 
 function addCharacter(v){
   data.characters[v]=(data.characters[v]||0)+1;
-  save()
+  save();
 }
 
 
-// 規定pt入力欄は作らない
-// 履歴には「規定pt」列だけ表示する
+// 規定ptの入力欄は作らない
+// 履歴の「規定pt」列だけ表示する
 function ensureHistoryPointUI(){
-  const table=document.querySelector("#cz-table");
-  const head=table?.closest("table")?.querySelector("thead tr");
 
-  // もしHTML側に古い規定pt入力欄が残っていたら削除
-  const pointsInput=document.getElementById("points-input");
+  const table=document.querySelector("#cz-table");
+
+  const head=
+    table?.closest("table")?.querySelector("thead tr");
+
+  // 古い規定pt入力欄がHTMLに残っていた場合は削除
+  const pointsInput=
+    document.getElementById("points-input");
+
   if(pointsInput){
     pointsInput.remove();
   }
 
   // 規定ptの見出しを追加
   if(head && !head.querySelector(".points-head")){
+
     const th=document.createElement("th");
+
     th.className="points-head";
     th.textContent="規定pt";
 
-    // 削除列の直前に追加
     head.insertBefore(th,head.lastElementChild);
   }
 }
 
 
-// 手動で履歴を追加する場合は規定ptを入力しない
+// 手動で履歴を追加する場合
+// 規定ptは自動入力されるCZ履歴以外では「-」
 function addHistory(){
-  const g=document.getElementById("g-input").value||"-";
+
+  const g=
+    document.getElementById("g-input").value||"-";
 
   data.history.push({
     g,
@@ -124,51 +161,70 @@ function addHistory(){
     points:"-"
   });
 
-  ["g-input","st-input"].forEach(id=>{
+  [
+    "g-input",
+    "st-input"
+  ].forEach(id=>{
     const el=document.getElementById(id);
-    if(el)el.value="";
+
+    if(el){
+      el.value="";
+    }
   });
 
-  save()
+  save();
 }
 
 function removeHistory(i){
   data.history.splice(i,1);
-  save()
+  save();
 }
 
 function resetAll(){
+
   if(confirm("すべての記録を削除しますか？")){
+
     localStorage.removeItem(KEY);
-    location.reload()
+
+    location.reload();
   }
 }
 
 function pct(n,total){
-  return total?((n/total)*100).toFixed(1):"0.0"
+  return total?
+    ((n/total)*100).toFixed(1):
+    "0.0";
 }
 
 function rate(events){
+
   let total=events.length;
-  let hit=events.filter(x=>x.type==="normal_light"||x.type==="light").length;
-  return total?Math.round(hit/total*100):0
+
+  let hit=events.filter(
+    x=>x.type==="normal_light"||x.type==="light"
+  ).length;
+
+  return total?
+    Math.round(hit/total*100):
+    0;
 }
 
 function singleLightStats(events){
-  const single=events.filter(x=>
-    x.type==="normal_none"||
-    x.type==="normal_light"||
-    x.type==="none"||
-    x.type==="light"
+
+  const single=events.filter(
+    x=>
+      x.type==="normal_none"||
+      x.type==="normal_light"||
+      x.type==="none"||
+      x.type==="light"
   );
 
-  const light=single.filter(x=>
-    x.type==="normal_light"||
-    x.type==="light"
+  const light=single.filter(
+    x=>x.type==="normal_light"||x.type==="light"
   ).length;
 
   return {
-    single:single.length,
+    single,
     light,
     rate:single.length?
       ((light/single.length)*100).toFixed(1):
@@ -177,64 +233,125 @@ function singleLightStats(events){
 }
 
 function avg15(events){
-  let c=events.filter(x=>x.pts>=15).length;
-  return events.length?(c/events.length).toFixed(1):"0.0"
+
+  let c=events.filter(
+    x=>x.pts>=15
+  ).length;
+
+  return events.length?
+    (c/events.length).toFixed(1):
+    "0.0";
 }
 
 function oneCount(events){
-  return events.filter(x=>x.pts===1).length
+
+  return events.filter(
+    x=>x.pts===1
+  ).length;
 }
 
+
 function render(){
+
+  // 規定pt入力欄を削除
   ensureHistoryPointUI();
 
-  const m=data.chars.munmyo,i=data.chars.ikoma;
 
-  document.getElementById("munmyo-points").textContent=m.points+" pt";
-  document.getElementById("ikoma-points").textContent=i.points+" pt";
+  const m=data.chars.munmyo;
+  const i=data.chars.ikoma;
 
-  document.getElementById("munmyo-rate").textContent=rate(m.events)+"%";
-  document.getElementById("ikoma-rate").textContent=rate(i.events)+"%";
+
+  document.getElementById("munmyo-points").textContent=
+    m.points+" pt";
+
+  document.getElementById("ikoma-points").textContent=
+    i.points+" pt";
+
+
+  document.getElementById("munmyo-rate").textContent=
+    rate(m.events)+"%";
+
+  document.getElementById("ikoma-rate").textContent=
+    rate(i.events)+"%";
+
 
   document.getElementById("munmyo-count").textContent=
-    `${m.events.filter(x=>x.type==="normal_light"||x.type==="light").length} / ${m.events.length}`;
+    `${m.events.filter(
+      x=>x.type==="normal_light"||x.type==="light"
+    ).length} / ${m.events.length}`;
+
 
   document.getElementById("ikoma-count").textContent=
-    `${i.events.filter(x=>x.type==="normal_light"||x.type==="light").length} / ${i.events.length}`;
+    `${i.events.filter(
+      x=>x.type==="normal_light"||x.type==="light"
+    ).length} / ${i.events.length}`;
 
-  document.getElementById("munmyo-avg15").textContent=avg15(m.events)+"回";
-  document.getElementById("ikoma-avg15").textContent=avg15(i.events)+"回";
 
-  document.getElementById("munmyo-one").textContent=oneCount(m.events)+"回";
-  document.getElementById("ikoma-one").textContent=oneCount(i.events)+"回";
+  document.getElementById("munmyo-avg15").textContent=
+    avg15(m.events)+"回";
 
-  const ms=singleLightStats(m.events),is=singleLightStats(i.events);
+  document.getElementById("ikoma-avg15").textContent=
+    avg15(i.events)+"回";
 
-  document.getElementById("munmyo-single-rate").textContent=ms.rate+"%";
+
+  document.getElementById("munmyo-one").textContent=
+    oneCount(m.events)+"回";
+
+  document.getElementById("ikoma-one").textContent=
+    oneCount(i.events)+"回";
+
+
+  const ms=singleLightStats(m.events);
+  const is=singleLightStats(i.events);
+
+
+  document.getElementById("munmyo-single-rate").textContent=
+    ms.rate+"%";
+
   document.getElementById("munmyo-single-count").textContent=
     `発光あり ${ms.light} / 単独 ${ms.single}`;
 
-  document.getElementById("ikoma-single-rate").textContent=is.rate+"%";
+
+  document.getElementById("ikoma-single-rate").textContent=
+    is.rate+"%";
+
   document.getElementById("ikoma-single-count").textContent=
     `発光あり ${is.light} / 単独 ${is.single}`;
 
-  let total=m.events.length+i.events.length;
+
+  let total=
+    m.events.length+i.events.length;
+
 
   let flashes=
-    m.events.filter(x=>x.type==="normal_light"||x.type==="light").length+
-    i.events.filter(x=>x.type==="normal_light"||x.type==="light").length;
+    m.events.filter(
+      x=>x.type==="normal_light"||x.type==="light"
+    ).length+
+    i.events.filter(
+      x=>x.type==="normal_light"||x.type==="light"
+    ).length;
+
 
   document.getElementById("overall-rate").textContent=
     total?
-    `1 / ${Math.round(total/Math.max(1,flashes))}`:
-    "1 / 0";
+      `1 / ${Math.round(
+        total/Math.max(1,flashes)
+      )}`:
+      "1 / 0";
 
-  document.getElementById("allstar-count").textContent=data.allstar;
+
+  document.getElementById("allstar-count").textContent=
+    data.allstar;
+
 
   document.getElementById("items").innerHTML=
     data.items.map((x,n)=>
-      `<div class="item">${esc(x)}<button onclick="removeItem(${n})">×</button></div>`
+      `<div class="item">
+        ${esc(x)}
+        <button onclick="removeItem(${n})">×</button>
+      </div>`
     ).join("");
+
 
   const vc=data.voices;
 
@@ -248,6 +365,7 @@ function render(){
   const kt=kw+km+ks+kOld;
   const vt=mt+ft+kt;
 
+
   document.getElementById("male-count").textContent=
     `${mt} (${pct(mt,vt)}%)`;
 
@@ -256,6 +374,7 @@ function render(){
 
   document.getElementById("kage-count").textContent=
     `${kt} (${pct(kt,vt)}%)`;
+
 
   document.getElementById("male-bar").style.width=
     (vt?mt/vt*100:0)+"%";
@@ -274,6 +393,7 @@ function render(){
   const cmi=cc["美馬"]||0;
   const ct=cm+cf+cmi;
 
+
   document.getElementById("cmale-count").textContent=
     `${cm} (${pct(cm,ct)}%)`;
 
@@ -282,6 +402,7 @@ function render(){
 
   document.getElementById("cmima-count").textContent=
     `${cmi} (${pct(cmi,ct)}%)`;
+
 
   document.getElementById("cmale-bar").style.width=
     (ct?cm/ct*100:0)+"%";
@@ -293,7 +414,7 @@ function render(){
     (ct?cmi/ct*100:0)+"%";
 
 
-  // 履歴表示
+  // 履歴
   document.getElementById("cz-table").innerHTML=
     data.history.map((x,n)=>`
       <tr>
@@ -307,31 +428,61 @@ function render(){
           x.points===undefined||
           x.points===""||
           x.points==="-"?
-          "-":
-          esc(x.points)+" pt"
+            "-":
+            esc(x.points)+" pt"
         }</td>
         <td>
-          <button onclick="removeHistory(${n})">削除</button>
+          <button onclick="removeHistory(${n})">
+            削除
+          </button>
         </td>
       </tr>
     `).join("");
 
 
-  // 規定pt見出し
+  // 規定ptの見出し
   const mh=
     document.querySelector("#cz-table")
     ?.closest("table")
     ?.querySelector("thead tr");
 
+
   if(mh && !mh.querySelector(".points-head")){
+
     const th=document.createElement("th");
+
     th.className="points-head";
     th.textContent="規定pt";
-    mh.insertBefore(th,mh.lastElementChild);
+
+    mh.insertBefore(
+      th,
+      mh.lastElementChild
+    );
   }
 }
 
+
+// 「CZ詳細」セクションを画面から削除
+function removeCZDetail(){
+
+  document.querySelectorAll(".card").forEach(card=>{
+
+    const title=
+      card.querySelector(".section-title");
+
+    if(
+      title &&
+      title.textContent.trim()==="CZ詳細"
+    ){
+      card.remove();
+    }
+
+  });
+}
+
+
 function esc(x){
+
   return String(x).replace(
     /[&<>"']/g,
     c=>({
@@ -341,7 +492,10 @@ function esc(x){
       '"':"&quot;",
       "'":"&#39;"
     }[c])
-  )
+  );
 }
 
+
+// 初期表示
+removeCZDetail();
 render();
